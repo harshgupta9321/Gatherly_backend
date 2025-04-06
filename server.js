@@ -7,7 +7,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import cookieParser from 'cookie-parser';
 import venueRoutes from './routes/venueRoutes.js';
-
+import bookingRoutes from './routes/bookingRoutes.js'
 
 
 
@@ -31,6 +31,7 @@ app.use(cookieParser());
 //api route
 app.use('/api/auth', authRoutes);
 app.use('/api/venues', venueRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 
 
