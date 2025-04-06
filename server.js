@@ -5,6 +5,9 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import bookingRoutes from './routes/bookingRoutes.js';
+import venueRoutes from './routes/venueRoutes.js'
+
 
 dotenv.config();
 const app = express();
@@ -23,6 +26,9 @@ app.use(morgan('dev'));
 
 //api route
 app.use('/api/auth', authRoutes);
+app.use('/api/venues', venueRoutes);
+app.use('/api/bookings', bookingRoutes);
+
 
 
 

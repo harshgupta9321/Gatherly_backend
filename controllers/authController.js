@@ -4,11 +4,7 @@ import User from '../models/User.js';
 
 export const register = async (req, res) => {
     try {
-        console.log("inside")
-
         const { name, email, password } = req.body;
-        console.log(email)
-
         const userExists = await User.findOne({ email });
 
         if (userExists) {
@@ -30,7 +26,6 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        console.log(email)
         const user = await User.findOne({ email });
 
         if (!user) {
