@@ -6,6 +6,9 @@ import morgan from 'morgan';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import cookieParser from 'cookie-parser';
+import venueRoutes from './routes/venueRoutes.js';
+
+
 
 
 
@@ -27,6 +30,7 @@ app.use(cookieParser());
 
 //api route
 app.use('/api/auth', authRoutes);
+app.use('/api/venues', venueRoutes);
 
 
 
