@@ -1,9 +1,8 @@
 import React from 'react'
+import AppRoutes from './Routes';
 
 const App = () => {
-  return (
-    <div>Thisi is client side</div>
-  )
+  return  <AppRoutes />
 }
 
 export default App
