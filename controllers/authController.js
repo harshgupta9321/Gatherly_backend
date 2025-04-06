@@ -4,7 +4,11 @@ import User from '../models/User.js';
 
 export const register = async (req, res) => {
     try {
+        console.log("inside")
+
         const { name, email, password } = req.body;
+        console.log(email)
+
         const userExists = await User.findOne({ email });
 
         if (userExists) {
@@ -26,6 +30,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log(email)
         const user = await User.findOne({ email });
 
         if (!user) {
@@ -43,4 +48,16 @@ export const login = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+export const test=async(req,res)=>{
+    try{
+        res.status(200).json({
+            message:"hii test"
+        })
+    }catch(error){
+        res.status(500).json({
+            message:"error"
+        })
+    }
+}
 
