@@ -1,14 +1,23 @@
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-export const protect = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ msg: 'Not authorized' });
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ msg: 'Invalid token' });
-  }
+dotenv.config();
+
+const authMiddleware = (req, res, next) => {
+    const token = req.cookies.token; // Get token from cookies
+
+    if (!token) {
+        return res.status(401).json({ message: 'Unauthorized, no token' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded; // Attach user to request
+        next();
+    } catch (error) {
+        res.status(401).json({ message: 'Unauthorized, invalid token' });
+    }
 };
+
+export default authMiddleware;

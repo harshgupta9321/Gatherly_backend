@@ -1,38 +1,33 @@
 import Booking from '../models/Booking.js';
-// import Venue from '../models/V.js'
+import Venue from '../models/Venue.js';
 
+export const addBooking = async (req, res) => {
+    try {
+        const { venueId, date } = req.body;
 
-// Create booking
-export const createBooking = async (req, res) => {
-  try {
-    const { venueId, date, hoursBooked } = req.body;
+        const existingBooking = await Booking.findOne({ venue: venueId, date });
+        if (existingBooking) {
+            return res.status(400).json({ message: 'Venue already booked on this date' });
+        }
 
-    const venue = await Venue.findById(venueId);
-    if (!venue) return res.status(404).json({ msg: 'Venue not found' });
-    if (!venue.isApproved) return res.status(400).json({ msg: 'Venue not approved' });
+        const booking = new Booking({
+            user: req.user.userId,
+            venue: venueId,
+            date,
+        });
 
-    const totalPrice = hoursBooked * venue.pricePerHour;
-
-    const booking = await Booking.create({
-      user: req.user.id,
-      venue: venueId,
-      date,
-      hoursBooked,
-      totalPrice,
-    });
-
-    res.status(201).json(booking);
-  } catch (err) {
-    res.status(500).json({ msg: 'Booking error', error: err.message });
-  }
+        await booking.save();
+        res.status(201).json({ message: 'Booking added successfully', booking });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
 };
 
-// Get all bookings for logged-in user
-export const getMyBookings = async (req, res) => {
-  try {
-    const bookings = await Booking.find({ user: req.user.id }).populate('venue');
-    res.json(bookings);
-  } catch (err) {
-    res.status(500).json({ msg: 'Error fetching bookings', error: err.message });
-  }
+export const getBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find({ user: req.user.userId }).populate('venue', 'name location');
+        res.status(200).json(bookings);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
 };

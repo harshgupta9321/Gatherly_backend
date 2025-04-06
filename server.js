@@ -5,30 +5,33 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
-import bookingRoutes from './routes/bookingRoutes.js';
-import venueRoutes from './routes/venueRoutes.js'
+import cookieParser from 'cookie-parser';
+import venueRoutes from './routes/venueRoutes.js';
+import bookingRoutes from './routes/bookingRoutes.js'
+
+
 
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-
 // Connect Database
 connectDB();
+
 
 // Middleware
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
+app.use(cookieParser()); 
 
 
 //api route
 app.use('/api/auth', authRoutes);
 app.use('/api/venues', venueRoutes);
 app.use('/api/bookings', bookingRoutes);
-
 
 
 

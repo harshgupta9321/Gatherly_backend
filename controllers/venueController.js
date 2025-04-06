@@ -1,37 +1,80 @@
-// import Venue from '../models/V'
+import Venue from '../models/Venue.js';
 
-// Create a new venue
-export const createVenue = async (req, res) => {
-  try {
-    const venue = await Venue.create({ ...req.body, owner: req.user.id });
-    res.status(201).json(venue);
-  } catch (err) {
-    res.status(500).json({ msg: 'Error creating venue', error: err.message });
-  }
+export const addVenue = async (req, res) => {
+    try {
+        const { name, location, capacity, price, description, images } = req.body;
+        const venue = new Venue({
+            name,
+            location,
+            capacity,
+            price,
+            description,
+            images,
+            createdBy: req.user.userId,
+        });
+
+        await venue.save();
+        res.status(201).json({ message: 'Venue added successfully', venue });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
 };
 
-// Get all approved venues
-export const getApprovedVenues = async (req, res) => {
-  try {
-    const venues = await Venue.find({ isApproved: true });
-    res.json(venues);
-  } catch (err) {
-    res.status(500).json({ msg: 'Error fetching venues', error: err.message });
-  }
+export const getVenues = async (req, res) => {
+    try {
+        const venues = await Venue.find().populate('createdBy', 'name email');
+        res.status(200).json(venues);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
 };
 
-// Admin: Approve a venue
-export const approveVenue = async (req, res) => {
-  try {
-    if (req.user.role !== 'admin') return res.status(403).json({ msg: 'Admin only' });
+export const getVenueById = async (req, res) => {
+    try {
+        const venue = await Venue.findById(req.params.id).populate('createdBy', 'name email');
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
+        res.status(200).json(venue);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
 
-    const venue = await Venue.findById(req.params.id);
-    if (!venue) return res.status(404).json({ msg: 'Venue not found' });
+export const updateVenue = async (req, res) => {
+    try {
+        const venue = await Venue.findById(req.params.id);
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
 
-    venue.isApproved = true;
-    await venue.save();
-    res.json({ msg: 'Venue approved', venue });
-  } catch (err) {
-    res.status(500).json({ msg: 'Error approving venue', error: err.message });
-  }
+        if (venue.createdBy.toString() !== req.user.userId) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+
+        Object.assign(venue, req.body);
+        await venue.save();
+
+        res.status(200).json({ message: 'Venue updated successfully', venue });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+export const deleteVenue = async (req, res) => {
+    try {
+        const venue = await Venue.findById(req.params.id);
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
+
+        if (venue.createdBy.toString() !== req.user.userId) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+
+        await venue.deleteOne();
+        res.status(200).json({ message: 'Venue deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
 };
