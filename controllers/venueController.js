@@ -48,7 +48,7 @@ export const updateVenue = async (req, res) => {
             return res.status(404).json({ message: 'Venue not found' });
         }
 
-        if (venue.createdBy.toString() !== req.user.userId) {
+        if (req.user.role !== 'admin' && venue.createdBy.toString() !== req.user.userId) {
             return res.status(403).json({ message: 'Unauthorized' });
         }
 
@@ -68,7 +68,7 @@ export const deleteVenue = async (req, res) => {
             return res.status(404).json({ message: 'Venue not found' });
         }
 
-        if (venue.createdBy.toString() !== req.user.userId) {
+        if (req.user.role !== 'admin' && venue.createdBy.toString() !== req.user.userId) {
             return res.status(403).json({ message: 'Unauthorized' });
         }
 

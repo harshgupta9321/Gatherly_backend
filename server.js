@@ -30,8 +30,8 @@ app.use(cookieParser());
 
 //api route
 app.use('/api/auth', authRoutes);
-app.use('/api/venues', venueRoutes);
-app.use('/api/bookings', bookingRoutes);
+app.use('/api', venueRoutes);
+app.use('/api', bookingRoutes);
 
 
 
