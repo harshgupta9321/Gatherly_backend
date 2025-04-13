@@ -12,10 +12,10 @@ import { checkRole } from '../middleware/checkRole.js';
 
 const router = express.Router();
 
-router.post('/venues', authMiddleware, checkRole(['admin', 'organizer']), addVenue);
-router.get('/venues', getVenues);
-router.get('/venues/:id', getVenueById);
-router.put('/venues/:id', authMiddleware, checkRole(['admin', 'organizer']), updateVenue);
-router.delete('/venues/:id', authMiddleware, checkRole(['admin', 'organizer']), deleteVenue);
+router.post('/', authMiddleware, addVenue); // Create venue
+router.get('/', getVenues); // Get all venues
+router.get('/:id', getVenueById); // Get a single venue
+router.put('/:id', authMiddleware, updateVenue); // Update venue
+router.delete('/:id', authMiddleware, deleteVenue); // Delete venue
 
 export default router;
