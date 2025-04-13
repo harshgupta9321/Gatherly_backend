@@ -16,14 +16,30 @@ export const createEvent = async (req, res) => {
   };
   
 
-export const getAllEvents = async (req, res) => {
-  try {
-    const events = await Event.find().populate('createdBy', 'name email');
-    res.status(200).json(events);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+
+  export const getAllEvents = async (req, res) => {
+    try {
+      const { category, location, search } = req.query;
+  
+      const filters = {};
+      if (category) filters.category = category;
+      if (location) filters.location = location;
+      if (search) filters.title = { $regex: search, $options: 'i' };
+  
+      console.log("Filters:", filters);
+  
+      const events = await Event.find(filters).sort({ date: 1 });
+      console.log("Found events:", events.length);
+  
+      res.json(events);
+    } catch (err) {
+      console.error("Error fetching events:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
+
+
 
 export const getEventById = async (req, res) => {
   try {
