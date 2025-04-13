@@ -7,12 +7,9 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import cookieParser from 'cookie-parser';
 import venueRoutes from './routes/venueRoutes.js';
-import bookingRoutes from './routes/bookingRoutes.js';
-import eventRoutes from './routes/eventRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
-
-
-
+import bookingRoutes from './routes/bookingRoutes.js'
+import eventRoutes from './routes/eventRoutes.js'
+import ticketBookingRoutes from './routes/ticketBookingRoutes.js'
 
 
 
@@ -40,7 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/venues', venueRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api/events', eventRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/ticket-booking', ticketBookingRoutes);
 
 
 
