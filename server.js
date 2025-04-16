@@ -10,9 +10,6 @@ import venueRoutes from './routes/venueRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js'
 import eventRoutes from './routes/eventRoutes.js'
 import ticketBookingRoutes from './routes/ticketBookingRoutes.js'
-import dashboardRoutes from './routes/dashboardRoutes.js'
-import recommendationRoutes from './routes/recommendationRoutes.js';
-
 
 
 
@@ -41,8 +38,7 @@ app.use('/api/venues', venueRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/ticket-booking', ticketBookingRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/recommendations', recommendationRoutes);
+
 
 
 app.get('/', (req, res) => {
