@@ -9,7 +9,9 @@ import cookieParser from 'cookie-parser';
 import venueRoutes from './routes/venueRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js'
 import eventRoutes from './routes/eventRoutes.js'
-import ticketBookingRoutes from './routes/ticketBookingRoutes.js'
+import ticketBookingRoutes from './routes/ticketBookingRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+
 
 
 
@@ -38,6 +40,7 @@ app.use('/api/venues', venueRoutes);
 app.use('/api', bookingRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/ticket-booking', ticketBookingRoutes);
+app.use('/api/admin',adminRoutes)
 
 
 
