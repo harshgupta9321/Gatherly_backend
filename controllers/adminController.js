@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Booking from '../models/Booking.js';
 import Venue from '../models/Venue.js';
 
+
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
