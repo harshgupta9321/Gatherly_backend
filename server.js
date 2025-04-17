@@ -10,6 +10,8 @@ import venueRoutes from './routes/venueRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js'
 import eventRoutes from './routes/eventRoutes.js'
 import ticketBookingRoutes from './routes/ticketBookingRoutes.js'
+import dashboardRoutes from './routes/dashboardRoutes.js'
+import recommendationRoutes from './routes/recommendationRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 
 dotenv.config();
