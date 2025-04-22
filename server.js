@@ -11,6 +11,8 @@ import bookingRoutes from './routes/bookingRoutes.js'
 import eventRoutes from './routes/eventRoutes.js'
 import ticketBookingRoutes from './routes/ticketBookingRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
+import dashboardRoutes from './routes/dashboardRoutes.js'
+import recommendationRoutes from './routes/recommendationRoutes.js'
 
 dotenv.config();
 const app = express();
@@ -39,12 +41,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/ticket-booking', ticketBookingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/recommendations', recommendationRoutes);
-app.use('api/admin',adminRoutes);
-
-
-app.get('/', (req, res) => {
-    res.send('API is running...');
-});
+app.use('/api/admin',adminRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
