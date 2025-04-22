@@ -1,20 +1,49 @@
 // controllers/eventController.js
 import Event from '../models/Event.js';
+import cloudinary from 'cloudinary'
 
 export const createEvent = async (req, res) => {
-    try {
-      const event = new Event({
-        ...req.body,
-        createdBy: req.user.userId, // This line is critical
-      });
-  
-      await event.save();
-      res.status(201).json(event);
-    } catch (err) {
-      res.status(400).json({ error: err.message });
+  try {
+    // Make sure the user is authenticated and has a valid token
+    const userId = req.user.userId; // Assuming you use a middleware to set the userId in req.user
+    if (!userId) {
+      return res.status(401).json({ message: 'User not authenticated' });
     }
-  };
+
+    const { title, description, date, time, location, ticketsAvailable, ticketPrice } = req.body;
+
+    // Handle image upload
+    let imageUrl = '';
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path);
+      imageUrl = result.secure_url;  // The URL of the uploaded image from Cloudinary
+    }
+
+    // Create a new event with the authenticated user's ID as the 'createdBy' field
+    const newEvent = new Event({
+      title,
+      description,
+      date,
+      time,
+      location,
+      ticketsAvailable,
+      ticketPrice,
+      image: imageUrl,  // Use the image URL returned by Cloudinary
+      createdBy: userId, // This is where you use the authenticated user's ID
+    });
+
+    // Save the event to the database
+    await newEvent.save();
+    
+    res.status(201).json({ message: 'Event created successfully', event: newEvent });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Something went wrong', error: error.message });
+  }
+};
+
   
+
 
 
   export const getAllEvents = async (req, res) => {

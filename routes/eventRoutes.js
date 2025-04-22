@@ -8,10 +8,11 @@ import {
   updateEvent,
   deleteEvent,
 } from '../controllers/eventController.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
-router.post('/create', authMiddleware, checkRole(['organizer', 'admin']), createEvent);
+router.post('/create', authMiddleware, checkRole(['organizer', 'admin']),upload.single('image'), createEvent);
 router.get('/', getAllEvents);
 router.get('/:id', getEventById);
 router.put('/:id', authMiddleware, checkRole(['organizer', 'admin']), updateEvent);

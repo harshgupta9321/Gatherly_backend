@@ -10,9 +10,16 @@ import venueRoutes from './routes/venueRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js'
 import eventRoutes from './routes/eventRoutes.js'
 import ticketBookingRoutes from './routes/ticketBookingRoutes.js'
-import adminRoutes from './routes/adminRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
 import recommendationRoutes from './routes/recommendationRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
+import eventCategoryRoutes from './routes/eventCategoryRoutes.js';
+import eventTagRoutes from './routes/eventTagRoutes.js';
+import eventSponsorRoutes from './routes/eventSponsorRoutes.js';
+// import eventReviewRoutes from './routes/eventReviewRoutes.js';
+import eventViewRoutes from './routes/eventViewRoutes.js';
+
+
 
 dotenv.config();
 const app = express();
@@ -42,6 +49,17 @@ app.use('/api/ticket-booking', ticketBookingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/admin',adminRoutes);
+app.use('/api/categories', eventCategoryRoutes);
+app.use('/api/tags', eventTagRoutes);
+app.use('/api/sponsors', eventSponsorRoutes);
+// app.use('/api/reviews', eventReviewRoutes);
+app.use('/api/views', eventViewRoutes);
+
+
+app.get('/', (req, res) => {
+    res.send('API is running...');
+});
+
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
