@@ -1,24 +1,45 @@
 import Venue from '../models/Venue.js';
+import cloudinary from 'cloudinary';
+
+// Set up Cloudinary configuration (in a separate utils/cloudinary.js or directly in your controller)
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+});
 
 export const addVenue = async (req, res) => {
-    try {
-        const { name, location, capacity, price, description, images } = req.body;
-        const venue = new Venue({
-            name,
-            location,
-            capacity,
-            price,
-            description,
-            images,
-            createdBy: req.user.userId,
-        });
-
-        await venue.save();
-        res.status(201).json({ message: 'Venue added successfully', venue });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
+  try {
+    const { name, location, capacity, price, description } = req.body;
+    
+    // Check if there are any images uploaded
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await cloudinary.v2.uploader.upload(file.path); // Upload file to Cloudinary
+        images.push(result.secure_url); // Store Cloudinary image URL
+      }
     }
+
+    // Create the venue with uploaded image URLs
+    const venue = new Venue({
+      name,
+      location,
+      capacity,
+      price,
+      description,
+      images,  // Array of image URLs from Cloudinary
+      createdBy: req.user.userId,
+    });
+
+    await venue.save();
+    res.status(201).json({ message: 'Venue added successfully', venue });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error });
+  }
 };
+
 
 export const getVenues = async (req, res) => {
     try {

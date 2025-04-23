@@ -47,7 +47,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/ticket-booking', ticketBookingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/recommendations', recommendationRoutes);
-app.use('api/admin',adminRoutes);
+app.use('/api/admin',adminRoutes);
 app.use('/api/categories', eventCategoryRoutes);
 app.use('/api/tags', eventTagRoutes);
 app.use('/api/sponsors', eventSponsorRoutes);

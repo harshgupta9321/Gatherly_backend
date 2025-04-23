@@ -60,3 +60,36 @@ export const getAllBookings = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Get users by role (admin can select any role, including 'admin', if no role is provided show all users)
+export const getUsersByRole = async (req, res) => {
+  try {
+    const { role } = req.query; // Get role from query params
+    
+    // Check if the role is valid and if provided
+    const validRoles = ['audience', 'organizer', 'admin'];  // Include 'admin' in valid roles
+    
+    // If no role is provided, fetch all users
+    let users;
+    if (!role) {
+      // No role specified, fetch all users
+      users = await User.find().select('-password'); // Get all users
+    } else if (validRoles.includes(role)) {
+      // If role is valid, fetch users of the specified role
+      users = await User.find({ role }).select('-password');
+    } else {
+      // Invalid role passed
+      return res.status(400).json({ message: 'Invalid role specified or role not allowed' });
+    }
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found for the given role or criteria' });
+    }
+
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+
