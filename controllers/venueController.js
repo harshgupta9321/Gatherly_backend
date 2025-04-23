@@ -1,7 +1,7 @@
 import Venue from '../models/Venue.js';
 import cloudinary from 'cloudinary';
 
-// Set up Cloudinary configuration (in a separate utils/cloudinary.js or directly in your controller)
+// Set up Cloudinary configuration
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
@@ -11,7 +11,12 @@ cloudinary.config({
 export const addVenue = async (req, res) => {
   try {
     const { name, location, capacity, price, description } = req.body;
-    
+
+    // Only admin and vendor can add a venue
+    if (!['admin', 'vendor'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Only admin and vendor can create venues' });
+    }
+
     // Check if there are any images uploaded
     let images = [];
     if (req.files && req.files.length > 0) {
@@ -28,7 +33,7 @@ export const addVenue = async (req, res) => {
       capacity,
       price,
       description,
-      images,  // Array of image URLs from Cloudinary
+      images,
       createdBy: req.user.userId,
     });
 
@@ -40,62 +45,61 @@ export const addVenue = async (req, res) => {
   }
 };
 
-
 export const getVenues = async (req, res) => {
-    try {
-        const venues = await Venue.find().populate('createdBy', 'name email');
-        res.status(200).json(venues);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
-    }
+  try {
+    const venues = await Venue.find().populate('createdBy', 'name email');
+    res.status(200).json(venues);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 export const getVenueById = async (req, res) => {
-    try {
-        const venue = await Venue.findById(req.params.id).populate('createdBy', 'name email');
-        if (!venue) {
-            return res.status(404).json({ message: 'Venue not found' });
-        }
-        res.status(200).json(venue);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+  try {
+    const venue = await Venue.findById(req.params.id).populate('createdBy', 'name email');
+    if (!venue) {
+      return res.status(404).json({ message: 'Venue not found' });
     }
+    res.status(200).json(venue);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 export const updateVenue = async (req, res) => {
-    try {
-        const venue = await Venue.findById(req.params.id);
-        if (!venue) {
-            return res.status(404).json({ message: 'Venue not found' });
-        }
-
-        if (req.user.role !== 'admin' && venue.createdBy.toString() !== req.user.userId) {
-            return res.status(403).json({ message: 'Unauthorized' });
-        }
-
-        Object.assign(venue, req.body);
-        await venue.save();
-
-        res.status(200).json({ message: 'Venue updated successfully', venue });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+  try {
+    const venue = await Venue.findById(req.params.id);
+    if (!venue) {
+      return res.status(404).json({ message: 'Venue not found' });
     }
+
+    if (req.user.role !== 'admin' && venue.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    Object.assign(venue, req.body);
+    await venue.save();
+
+    res.status(200).json({ message: 'Venue updated successfully', venue });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 export const deleteVenue = async (req, res) => {
-    try {
-        const venue = await Venue.findById(req.params.id);
-        if (!venue) {
-            return res.status(404).json({ message: 'Venue not found' });
-        }
-
-        if (req.user.role !== 'admin' && venue.createdBy.toString() !== req.user.userId) {
-            return res.status(403).json({ message: 'Unauthorized' });
-        }
-
-        await venue.deleteOne();
-        res.status(200).json({ message: 'Venue deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+  try {
+    const venue = await Venue.findById(req.params.id);
+    if (!venue) {
+      return res.status(404).json({ message: 'Venue not found' });
     }
+
+    if (req.user.role !== 'admin' && venue.createdBy.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    await venue.deleteOne();
+    res.status(200).json({ message: 'Venue deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };

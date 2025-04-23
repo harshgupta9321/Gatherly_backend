@@ -103,6 +103,32 @@ export const updateUserRole = async (req, res) => {
     }
 };
 
+// User requests to become organizer or vendor
+export const requestRoleUpgrade = async (req, res) => {
+    try {
+      const { roleRequest } = req.body;
+  
+      if (!['organizer', 'vendor'].includes(roleRequest)) {
+        return res.status(400).json({ message: 'Invalid role requested' });
+      }
+  
+      const user = await User.findById(req.user.userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+  
+      if (user.role !== 'audience') {
+        return res.status(400).json({ message: 'Only audience can request role change' });
+      }
+  
+      user.roleRequest = roleRequest;
+      await user.save();
+  
+      res.status(200).json({ message: 'Role request submitted successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+  
+
 
 
 // ✅ Test Route
