@@ -4,6 +4,52 @@ import Event from '../models/Event.js';
 import User from '../models/User.js';
 import { sendTemplatedEmail } from '../utils/emailUtil.js';
 
+import stripe from '../utils/stripe.js';
+
+export const initiateStripeCheckout = async (req, res) => {
+  try {
+    const { eventId, tickets } = req.body;
+    const userId = req.user.userId;
+
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    if (event.ticketsAvailable < tickets) {
+      return res.status(400).json({ message: 'Not enough tickets available' });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: event.title,
+            description: event.description,
+          },
+          unit_amount: Math.round(event.ticketPrice * 100), // cents
+        },
+        quantity: tickets,
+      }],
+      // success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      // cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
+      success_url: 'https://example.com/success',
+  cancel_url: 'https://example.com/cancel',
+      metadata: {
+        eventId,
+        userId,
+        tickets
+      }
+    });
+
+    res.status(200).json({ url: session.url });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 export const createTicketBooking = async (req, res) => {
   try {
     const { eventId, tickets } = req.body;
