@@ -67,7 +67,7 @@ export const getUsersByRole = async (req, res) => {
     const { role } = req.query; // Get role from query params
     
     // Check if the role is valid and if provided
-    const validRoles = ['audience', 'organizer', 'admin'];  // Include 'admin' in valid roles
+    const validRoles = ['audience', 'organizer', 'admin','vendor'];  // Include 'admin' in valid roles
     
     // If no role is provided, fetch all users
     let users;
@@ -92,4 +92,33 @@ export const getUsersByRole = async (req, res) => {
   }
 };
 
+// Get all users with role requests
+export const getRoleRequests = async (req, res) => {
+  try {
+    const users = await User.find({ roleRequest: { $ne: null } }).select('-password');
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Approve role request
+export const approveRoleRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+    if (!user || !user.roleRequest) {
+      return res.status(404).json({ message: 'User or role request not found' });
+    }
+
+    user.role = user.roleRequest;
+    user.roleRequest = null;
+    await user.save();
+
+    res.status(200).json({ message: 'Role request approved', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
