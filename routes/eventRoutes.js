@@ -7,6 +7,7 @@ import {
   getEventById,
   updateEvent,
   deleteEvent,
+  getMyEvents
 } from '../controllers/eventController.js';
 import upload from '../middleware/upload.js';
 
