@@ -98,3 +98,17 @@ export const createTicketBooking = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getMyBookedEvents = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const bookings = await TicketBooking.find({ user: userId }).populate('event');
+    const events = bookings.map(booking => booking.event);
+
+    res.status(200).json({ events });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
