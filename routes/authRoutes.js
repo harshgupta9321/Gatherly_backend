@@ -5,7 +5,8 @@ import {
     logout,
     test,
     updateUserRole,
-    requestRoleUpgrade // ✅ New Controller
+    getUserCount,
+    requestRoleUpgrade 
 } from '../controllers/authController.js';
 
 import authMiddleware from '../middleware/authMiddleware.js';
@@ -17,6 +18,7 @@ const router = express.Router();
 router.post('/register', register);
 router.post('/login', login);
 router.post('/logout', logout);
+router.get('/user-count', getUserCount);
 router.get('/test', test);
 
 // Role request by user (audience -> organizer/vendor)

@@ -23,7 +23,7 @@ export const initiateStripeCheckout = async (req, res) => {
       mode: 'payment',
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency: 'inr',
           product_data: {
             name: event.title,
             description: event.description,
