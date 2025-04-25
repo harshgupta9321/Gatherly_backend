@@ -1,6 +1,7 @@
 // controllers/eventController.js
 import Event from '../models/Event.js';
-import cloudinary from 'cloudinary'
+import cloudinary from 'cloudinary';
+import EventLike from '../models/EventLike.js';
 
 export const createEvent = async (req, res) => {
   try {
@@ -128,16 +129,32 @@ export const incrementView = async (req, res) => {
   }
 };
 
+// export const incrementLike = async (req, res) => {
+//   try {
+//     const event = await Event.findById(req.params.id);
+//     if (!event) return res.status(404).json({ message: 'Event not found' });
+
+//     // Increment the like count
+//     event.likes += 1;
+//     await event.save();
+//     res.status(200).json({ message: 'Like incremented successfully', likes: event.likes });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
 export const incrementLike = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: 'Event not found' });
+    const { eventId } = req.params;
+    const ipAddress = req.ip;
+    const userId = req.user?.userId || null;
 
-    // Increment the like count
-    event.likes += 1;
-    await event.save();
-    res.status(200).json({ message: 'Like incremented successfully', likes: event.likes });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const existingLike = await EventLike.findOne({ event: eventId, $or: [{ user: userId }, { ipAddress }] });
+    if (existingLike) return res.status(400).json({ message: 'Already liked' });
+
+    await EventLike.create({ event: eventId, user: userId, ipAddress });
+    res.status(201).json({ message: 'Event liked' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
