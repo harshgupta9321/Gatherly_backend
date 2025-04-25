@@ -43,6 +43,7 @@ const eventSchema = new mongoose.Schema({
   sponsors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventSponsor' }],
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventReview' }],
   views: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EventView' }],
+  likes: { type: Number, default: 0 },
 
 }, { timestamps: true });
 

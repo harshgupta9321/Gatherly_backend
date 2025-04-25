@@ -110,3 +110,34 @@ export const deleteEvent = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// ------------------------------
+// event views section 
+// controllers/eventController.js
+export const incrementView = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    // Increment the view count by adding the user's view
+    event.views.push(req.user.userId);  // Assuming userId is provided in req.user from auth middleware
+    await event.save();
+    res.status(200).json({ message: 'View incremented successfully', views: event.views.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const incrementLike = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    // Increment the like count
+    event.likes += 1;
+    await event.save();
+    res.status(200).json({ message: 'Like incremented successfully', likes: event.likes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

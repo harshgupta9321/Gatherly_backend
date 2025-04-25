@@ -18,6 +18,7 @@ import eventTagRoutes from './routes/eventTagRoutes.js';
 import eventSponsorRoutes from './routes/eventSponsorRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import interactionRoutes from './routes/interactionRoutes.js';
+import eventViewRoutes from './routes/eventViewRoutes.js'
 
 
 
@@ -54,6 +55,8 @@ app.use('/api/tags', eventTagRoutes);
 app.use('/api/sponsors', eventSponsorRoutes);
 app.use('/api/interactions', interactionRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/event-views', eventViewRoutes);
+
 
 
 
