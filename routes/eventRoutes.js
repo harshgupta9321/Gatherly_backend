@@ -8,8 +8,8 @@ import {
   updateEvent,
   deleteEvent,
   getMyEvents,
-  incrementLike,
-  incrementView
+  incrementView,
+  toggleLike
 } from '../controllers/eventController.js';
 import upload from '../middleware/upload.js';
 
@@ -23,7 +23,7 @@ router.put('/:id', authMiddleware, checkRole(['organizer', 'admin']), updateEven
 router.delete('/:id', authMiddleware, checkRole(['organizer', 'admin']), deleteEvent);
 // routes/eventRoutes.js
 router.put('/:id/view', authMiddleware, incrementView); // Increment view count
-router.put('/:eventId/like', authMiddleware, incrementLike); // Increment like count
+router.put('/:eventId/like', authMiddleware, toggleLike); // Increment like count
 
 
 export default router;
