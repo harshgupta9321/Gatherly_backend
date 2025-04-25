@@ -143,18 +143,43 @@ export const incrementView = async (req, res) => {
 //   }
 // };
 
-export const incrementLike = async (req, res) => {
+// export const incrementLike = async (req, res) => {
+//   try {
+//     const event = await Event.findById(req.params.id);
+//     if (!event) return res.status(404).json({ message: 'Event not found' });
+
+//     // Increment the like count
+//     event.likes += 1;
+//     await event.save();
+//     res.status(200).json({ message: 'Like incremented successfully', likes: event.likes });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
+
+export const toggleLike = async (req, res) => {
   try {
     const { eventId } = req.params;
     const ipAddress = req.ip;
     const userId = req.user?.userId || null;
 
-    const existingLike = await EventLike.findOne({ event: eventId, $or: [{ user: userId }, { ipAddress }] });
-    if (existingLike) return res.status(400).json({ message: 'Already liked' });
+    const existingLike = await EventLike.findOne({
+      event: eventId,
+      $or: [{ user: userId }, { ipAddress }],
+    });
+
+    if (existingLike) {
+      await EventLike.findByIdAndDelete(existingLike._id);
+      return res.status(200).json({ message: 'Event unliked' });
+    }
 
     await EventLike.create({ event: eventId, user: userId, ipAddress });
     res.status(201).json({ message: 'Event liked' });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
