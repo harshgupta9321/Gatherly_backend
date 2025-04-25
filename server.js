@@ -19,6 +19,7 @@ import eventSponsorRoutes from './routes/eventSponsorRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import interactionRoutes from './routes/interactionRoutes.js';
 import eventViewRoutes from './routes/eventViewRoutes.js'
+import webhookRoutes from './routes/webHookRoutes.js';
 
 
 
@@ -56,6 +57,9 @@ app.use('/api/sponsors', eventSponsorRoutes);
 app.use('/api/interactions', interactionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/event-views', eventViewRoutes);
+app.use('/webhook', webhookRoutes);
+
+app.use(express.json());
 
 
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-  likeEvent,
+  // likeEvent,
   likeVenue,
   getEventLikes,
   getVenueLikes,
@@ -19,7 +19,7 @@ const router = express.Router();
 // Event interactions
 router.post('/events/:eventId/view', recordEventView);
 router.get('/events/:eventId/views', getEventViews);
-router.post('/events/:eventId/like', authMiddleware, likeEvent);
+// router.post('/events/:eventId/like', authMiddleware, likeEvent);
 router.get('/events/:eventId/likes', getEventLikes);
 
 // Venue interactions
