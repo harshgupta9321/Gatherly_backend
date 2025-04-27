@@ -210,8 +210,31 @@ export const updateUserProfile = async (req, res) => {
       res.status(500).json({ message: 'Server error' });
     }
   };
-  
-  
+
+
+// Get logged-in user's details
+export const getUserDetails = async (req, res) => {
+  try {
+    const userId = req.user.userId; // Extract userId from authenticated request
+
+    // Find the user in the database by ID and return selected details
+    const user = await User.findById(userId).select('name email role avatar');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar, // Avatar URL from Cloudinary
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 
 
 
