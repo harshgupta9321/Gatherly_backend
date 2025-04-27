@@ -50,9 +50,52 @@ import stripe from '../utils/stripe.js';  // Stripe configuration file
 //   }
 // };
 
-export const createBooking = async (req, res) => {
+// export const createBooking = async (req, res) => {
+//   try {
+//     const { venueId, date } = req.body;
+
+//     const venue = await Venue.findById(venueId);
+//     if (!venue) return res.status(404).json({ message: 'Venue not found' });
+
+//     const totalAmount = venue.price * 100;
+
+//     const session = await stripe.checkout.sessions.create({
+//       payment_method_types: ['card'],
+//       mode: 'payment',
+//       line_items: [
+//         {
+//           price_data: {
+//             currency: 'inr',
+//             product_data: {
+//               name: venue.name,
+//               description: venue.description,
+//             },
+//             unit_amount: totalAmount,
+//           },
+//           quantity: 1,
+//         },
+//       ],
+//       success_url: 'http://localhost:5173/payment-success',
+//       cancel_url: 'http://localhost:5173/payment-cancel',
+//       metadata: {
+//         venueId,
+//         userId: req.user.userId,
+//         date,
+//       },
+//     });
+
+//     res.status(200).json({ url: session.url });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Server error', error });
+//   }
+// };
+
+
+export const initiateVenueBooking = async (req, res) => {
   try {
     const { venueId, date } = req.body;
+    const userId = req.user.userId;
 
     const venue = await Venue.findById(venueId);
     if (!venue) return res.status(404).json({ message: 'Venue not found' });
@@ -62,24 +105,22 @@ export const createBooking = async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'inr',
-            product_data: {
-              name: venue.name,
-              description: venue.description,
-            },
-            unit_amount: totalAmount,
+      line_items: [{
+        price_data: {
+          currency: 'inr',
+          product_data: {
+            name: venue.name,
+            description: venue.description,
           },
-          quantity: 1,
+          unit_amount: totalAmount,
         },
-      ],
-      success_url: 'http://localhost:5173/payment-success',
-      cancel_url: 'http://localhost:5173/payment-cancel',
+        quantity: 1,
+      }],
+      success_url: `http://localhost:5173/venue-payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `http://localhost:5173/payment-cancel`,
       metadata: {
         venueId,
-        userId: req.user.userId,
+        userId,
         date,
       },
     });
@@ -90,6 +131,29 @@ export const createBooking = async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+export const confirmVenueBooking = async (req, res) => {
+  try {
+    const { venueId, date } = req.body;
+    const userId = req.user.userId;
+
+    const venue = await Venue.findById(venueId);
+    if (!venue) return res.status(404).json({ message: 'Venue not found' });
+
+    const booking = new Booking({
+      venue: venueId,
+      user: userId,
+      date,
+    });
+
+    await booking.save();
+    res.status(201).json({ message: 'Booking created', booking });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 
 
 
