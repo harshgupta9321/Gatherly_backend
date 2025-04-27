@@ -1,34 +1,79 @@
+import cloudinary from 'cloudinary';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
+// Initialize Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 // ✅ Register (assign default role: 'audience')
 export const register = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-        const userExists = await User.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = new User({
-            name,
-            email,
-            password: hashedPassword,
-            role: 'audience', // 👈 Set default role here
-        });
-
-        await newUser.save();
-
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server error' });
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' });
     }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Handle avatar image upload (if exists)
+    let avatarUrl = '';
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path);  // Upload the image to Cloudinary
+      avatarUrl = result.secure_url;  // Get the URL of the uploaded image
+    }
+
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'audience', // 👈 Set default role here
+      avatar: avatarUrl,  // Save the avatar URL in the User document
+    });
+
+    await newUser.save();
+
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };
+
+
+// ✅ Register (assign default role: 'audience')
+// export const register = async (req, res) => {
+//     try {
+//         const { name, email, password } = req.body;
+
+//         const userExists = await User.findOne({ email });
+//         if (userExists) {
+//             return res.status(400).json({ message: 'User already exists' });
+//         }
+
+//         const salt = await bcrypt.genSalt(10);
+//         const hashedPassword = await bcrypt.hash(password, salt);
+
+//         const newUser = new User({
+//             name,
+//             email,
+//             password: hashedPassword,
+//             role: 'audience', // 👈 Set default role here
+//         });
+
+//         await newUser.save();
+
+//         res.status(201).json({ message: 'User registered successfully' });
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server error' });
+//     }
+// };
 
 // ✅ Login (safe, reads role from DB)
 export const login = async (req, res) => {
@@ -138,6 +183,34 @@ export const requestRoleUpgrade = async (req, res) => {
       res.status(500).json({ success: false, message: 'Server error' });
     }
   };
+
+  // ✅ Update User Profile (update avatar)
+export const updateUserProfile = async (req, res) => {
+    try {
+      const userId = req.user.userId;  // Assuming userId is in req.user from authentication middleware
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // Handle avatar image upload (if exists)
+      let avatarUrl = user.avatar;  // Keep existing avatar if no new image is uploaded
+      if (req.file) {
+        // Upload the new avatar to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path);
+        avatarUrl = result.secure_url;  // Get the URL of the uploaded image
+      }
+  
+      // Update the user profile with the new avatar URL
+      user.avatar = avatarUrl;
+      await user.save();
+  
+      res.status(200).json({ message: 'User profile updated successfully', user });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+  
   
 
 
