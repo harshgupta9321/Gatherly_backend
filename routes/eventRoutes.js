@@ -8,8 +8,8 @@ import {
   updateEvent,
   deleteEvent,
   getMyEvents,
-  incrementView,
-  toggleLike
+ toggleLike,
+  incrementView
 } from '../controllers/eventController.js';
 import upload from '../middleware/upload.js';
 

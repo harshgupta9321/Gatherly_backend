@@ -47,19 +47,57 @@ export const createEvent = async (req, res) => {
 
 
 
+  // export const getAllEvents = async (req, res) => {
+  //   try {
+  //     const { category, location, search } = req.query;
+  
+  //     const filters = {};
+  //     if (category) filters.category = category;
+  //     if (location) filters.location = location;
+  //     if (search) filters.title = { $regex: search, $options: 'i' };
+  
+  //     console.log("Filters:", filters);
+  
+  //     const events = await Event.find(filters).sort({ date: 1 });
+  //     console.log("Found events:", events.length);
+  
+  //     res.json(events);
+  //   } catch (err) {
+  //     console.error("Error fetching events:", err.message);
+  //     res.status(500).json({ error: err.message });
+  //   }
+  // };
+  
   export const getAllEvents = async (req, res) => {
     try {
       const { category, location, search } = req.query;
-  
       const filters = {};
       if (category) filters.category = category;
       if (location) filters.location = location;
       if (search) filters.title = { $regex: search, $options: 'i' };
   
-      console.log("Filters:", filters);
-  
-      const events = await Event.find(filters).sort({ date: 1 });
-      console.log("Found events:", events.length);
+      const events = await Event.aggregate([
+        { $match: filters },
+        {
+          $lookup: {
+            from: 'eventlikes',
+            localField: '_id',
+            foreignField: 'event',
+            as: 'likeDocs'
+          }
+        },
+        {
+          $addFields: {
+            likeCount: { $size: '$likeDocs' }
+          }
+        },
+        {
+          $project: {
+            likeDocs: 0
+          }
+        },
+        { $sort: { date: 1 } }
+      ]);
   
       res.json(events);
     } catch (err) {
@@ -67,9 +105,6 @@ export const createEvent = async (req, res) => {
       res.status(500).json({ error: err.message });
     }
   };
-  
-
-
 
 export const getEventById = async (req, res) => {
   try {
@@ -166,16 +201,16 @@ export const toggleLike = async (req, res) => {
 
     const existingLike = await EventLike.findOne({
       event: eventId,
-      $or: [{ user: userId }, { ipAddress }],
+      $or: [{ user: userId }],
     });
 
     if (existingLike) {
       await EventLike.findByIdAndDelete(existingLike._id);
-      return res.status(200).json({ message: 'Event unliked' });
+      return res.status(200).json({ message: 'Event unliked', color:true });
     }
 
     await EventLike.create({ event: eventId, user: userId, ipAddress });
-    res.status(201).json({ message: 'Event liked' });
+    res.status(201).json({ message: 'Event liked',color:false });
 
   } catch (error) {
     res.status(500).json({ message: error.message });
