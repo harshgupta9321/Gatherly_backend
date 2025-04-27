@@ -8,6 +8,7 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
+
 export const addVenue = async (req, res) => {
   try {
     const { name, location, capacity, price, description } = req.body;
