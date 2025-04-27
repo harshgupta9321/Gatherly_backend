@@ -3,10 +3,9 @@ import TicketBooking from '../models/TicketBooking.js';
 import Event from '../models/Event.js';
 import User from '../models/User.js';
 import { sendTemplatedEmail } from '../utils/emailUtil.js';
-
 import stripe from '../utils/stripe.js';
 
-export const initiateStripeCheckout = async (req, res) => {
+export const initiateTicketBooking = async (req, res) => {
   try {
     const { eventId, tickets } = req.body;
     const userId = req.user.userId;
@@ -28,18 +27,16 @@ export const initiateStripeCheckout = async (req, res) => {
             name: event.title,
             description: event.description,
           },
-          unit_amount: Math.round(event.ticketPrice * 100), // cents
+          unit_amount: Math.round(event.ticketPrice * 100),
         },
         quantity: tickets,
       }],
       success_url: `http://localhost:5173/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `http://localhost:5173/payment-cancel`,
-      // success_url: 'https://example.com/success',
-      // cancel_url: 'https://example.com/cancel',
       metadata: {
         eventId,
         userId,
-        tickets
+        tickets,
       }
     });
 
@@ -50,11 +47,18 @@ export const initiateStripeCheckout = async (req, res) => {
 };
 
 
-export const createTicketBooking = async (req, res) => {
-  try {
-    const { eventId, tickets } = req.body;
-    const userId = req.user.userId;
 
+
+export const confirmTicketBooking = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    
+    // 1. Retrieve session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    const { eventId, userId, tickets } = session.metadata;
+
+    // 2. Check if event exists
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
@@ -62,6 +66,7 @@ export const createTicketBooking = async (req, res) => {
       return res.status(400).json({ message: 'Not enough tickets available' });
     }
 
+    // 3. Create Ticket Booking
     const totalPrice = event.ticketPrice * tickets;
 
     const ticketBooking = new TicketBooking({
@@ -76,10 +81,9 @@ export const createTicketBooking = async (req, res) => {
     event.ticketsAvailable -= tickets;
     await event.save();
 
-    // Fetch user for email
+    // 4. Send Confirmation Email
     const user = await User.findById(userId);
 
-    // Send confirmation email
     await sendTemplatedEmail(
       user.email,
       'Your Ticket Booking Confirmation',
@@ -94,7 +98,7 @@ export const createTicketBooking = async (req, res) => {
 
     res.status(201).json({ message: 'Ticket booking successful', ticketBooking });
   } catch (error) {
-    console.error(error);
+    console.error('Error in confirmTicketBooking:', error.message);
     res.status(500).json({ message: error.message });
   }
 };
