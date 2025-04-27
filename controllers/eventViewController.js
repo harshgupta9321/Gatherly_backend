@@ -11,13 +11,11 @@ export const recordEventView = async (req, res) => {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    const ipAddress = req.ip;
     const userId = req.user ? req.user.userId : null;
 
     const view = new EventView({
       event: eventId,
       user: userId,
-      ipAddress
     });
 
     await view.save();

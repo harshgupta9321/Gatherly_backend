@@ -22,7 +22,7 @@ router.get('/my-events', authMiddleware, checkRole(['organizer']), getMyEvents);
 router.put('/:id', authMiddleware, checkRole(['organizer', 'admin']), updateEvent);
 router.delete('/:id', authMiddleware, checkRole(['organizer', 'admin']), deleteEvent);
 // routes/eventRoutes.js
-router.put('/:id/view', authMiddleware, incrementView); // Increment view count
+router.put('/:eventId/view', authMiddleware, incrementView); // Increment view count
 router.put('/:eventId/like', authMiddleware, toggleLike); // Increment like count
 
 

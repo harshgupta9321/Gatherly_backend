@@ -2,6 +2,10 @@
 import Event from '../models/Event.js';
 import cloudinary from 'cloudinary';
 import EventLike from '../models/EventLike.js';
+import EventView from '../models/EventView.js';
+
+
+
 
 export const createEvent = async (req, res) => {
   try {
@@ -43,23 +47,38 @@ export const createEvent = async (req, res) => {
   }
 };
 
+
   
-
-
-
   // export const getAllEvents = async (req, res) => {
   //   try {
   //     const { category, location, search } = req.query;
-  
   //     const filters = {};
   //     if (category) filters.category = category;
   //     if (location) filters.location = location;
   //     if (search) filters.title = { $regex: search, $options: 'i' };
   
-  //     console.log("Filters:", filters);
-  
-  //     const events = await Event.find(filters).sort({ date: 1 });
-  //     console.log("Found events:", events.length);
+  //     const events = await Event.aggregate([
+  //       { $match: filters },
+  //       {
+  //         $lookup: {
+  //           from: 'eventlikes',
+  //           localField: '_id',
+  //           foreignField: 'event',
+  //           as: 'likeDocs'
+  //         }
+  //       },
+  //       {
+  //         $addFields: {
+  //           likeCount: { $size: '$likeDocs' }
+  //         }
+  //       },
+  //       {
+  //         $project: {
+  //           likeDocs: 0
+  //         }
+  //       },
+  //       { $sort: { date: 1 } }
+  //     ]);
   
   //     res.json(events);
   //   } catch (err) {
@@ -67,7 +86,7 @@ export const createEvent = async (req, res) => {
   //     res.status(500).json({ error: err.message });
   //   }
   // };
-  
+
   export const getAllEvents = async (req, res) => {
     try {
       const { category, location, search } = req.query;
@@ -80,7 +99,7 @@ export const createEvent = async (req, res) => {
         { $match: filters },
         {
           $lookup: {
-            from: 'eventlikes',
+            from: 'eventlikes', // Lookup to count likes
             localField: '_id',
             foreignField: 'event',
             as: 'likeDocs'
@@ -88,23 +107,38 @@ export const createEvent = async (req, res) => {
         },
         {
           $addFields: {
-            likeCount: { $size: '$likeDocs' }
+            likeCount: { $size: '$likeDocs' } // Add like count field
+          }
+        },
+        {
+          $lookup: {
+            from: 'eventviews', // Lookup to count views
+            localField: '_id',
+            foreignField: 'event',
+            as: 'viewDocs'
+          }
+        },
+        {
+          $addFields: {
+            viewCount: { $size: '$viewDocs' } // Add view count field
           }
         },
         {
           $project: {
-            likeDocs: 0
+            likeDocs: 0,
+            viewDocs: 0 // Exclude the likeDocs and viewDocs arrays from the result
           }
         },
-        { $sort: { date: 1 } }
+        { $sort: { date: 1 } } // Sort by date (ascending)
       ]);
   
-      res.json(events);
+      res.json(events); // Return events with like and view counts
     } catch (err) {
       console.error("Error fetching events:", err.message);
       res.status(500).json({ error: err.message });
     }
   };
+  
 
 export const getEventById = async (req, res) => {
   try {
@@ -147,52 +181,10 @@ export const deleteEvent = async (req, res) => {
   }
 };
 
-// ------------------------------
-// event views section 
-// controllers/eventController.js
-export const incrementView = async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) return res.status(404).json({ message: 'Event not found' });
-
-    // Increment the view count by adding the user's view
-    event.views.push(req.user.userId);  // Assuming userId is provided in req.user from auth middleware
-    await event.save();
-    res.status(200).json({ message: 'View incremented successfully', views: event.views.length });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// export const incrementLike = async (req, res) => {
-//   try {
-//     const event = await Event.findById(req.params.id);
-//     if (!event) return res.status(404).json({ message: 'Event not found' });
-
-//     // Increment the like count
-//     event.likes += 1;
-//     await event.save();
-//     res.status(200).json({ message: 'Like incremented successfully', likes: event.likes });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
-// export const incrementLike = async (req, res) => {
-//   try {
-//     const event = await Event.findById(req.params.id);
-//     if (!event) return res.status(404).json({ message: 'Event not found' });
-
-//     // Increment the like count
-//     event.likes += 1;
-//     await event.save();
-//     res.status(200).json({ message: 'Like incremented successfully', likes: event.likes });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
 
 
+
+// like function
 export const toggleLike = async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -217,4 +209,61 @@ export const toggleLike = async (req, res) => {
   }
 };
 
+// event views section 
+export const incrementView = async (req, res) => {
+  try {
+    const { eventId } = req.params; // Get eventId from the URL params
+
+    // Find the event by ID
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Get the userId if the user is logged in, otherwise use IP address for anonymous views
+    const userId = req.user ? req.user.userId : null;
+    const ipAddress = req.ip; // For anonymous users
+
+    // Check if the view already exists for this user/IP and event
+    const existingView = await EventView.findOne({
+      event: eventId,
+      $or: [{ user: userId }, { ipAddress }],
+    });
+
+    if (existingView) {
+      // If the user has already viewed the event, don't count the view again
+      return res.status(200).json({ message: 'View already recorded' });
+    }
+
+    // Create a new view record for this event
+    const view = new EventView({
+      event: eventId,
+      user: userId, // This will be null for anonymous users
+      ipAddress,    // For anonymous users, we track the IP
+    });
+
+    await view.save(); // Save the view record to the database
+
+    // Return a success response
+    res.status(200).json({ message: 'View recorded' });
+
+  } catch (error) {
+    // Catch any errors and return an internal server error message
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// Optional: get views count for a single event
+export const getEventViews = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const viewsCount = await EventView.countDocuments({ event: eventId });
+
+    res.status(200).json({ eventId, viewsCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
