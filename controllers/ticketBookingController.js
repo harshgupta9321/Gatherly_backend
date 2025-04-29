@@ -31,7 +31,7 @@ export const initiateTicketBooking = async (req, res) => {
         },
         quantity: tickets,
       }],
-      success_url: `http://localhost:5173/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `http://localhost:5173/ticket-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `http://localhost:5173/payment-cancel`,
       metadata: {
         eventId,
