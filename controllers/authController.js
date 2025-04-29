@@ -13,6 +13,7 @@ cloudinary.config({
 // ✅ Register (assign default role: 'audience')
 export const register = async (req, res) => {
   try {
+    console.log("inside of register")
     const { name, email, password } = req.body;
 
     const userExists = await User.findOne({ email });
@@ -29,7 +30,7 @@ export const register = async (req, res) => {
       const result = await cloudinary.uploader.upload(req.file.path);  // Upload the image to Cloudinary
       avatarUrl = result.secure_url;  // Get the URL of the uploaded image
     }
-
+    console.log(avatarUrl)
     const newUser = new User({
       name,
       email,

@@ -1,5 +1,6 @@
-import express from 'express';
 import dotenv from 'dotenv';
+dotenv.config(); 
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -19,11 +20,9 @@ import eventSponsorRoutes from './routes/eventSponsorRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import interactionRoutes from './routes/interactionRoutes.js';
 import eventViewRoutes from './routes/eventViewRoutes.js'
-import webhookRoutes from './routes/webHookRoutes.js';
 
 
-
-dotenv.config();
+// dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -57,7 +56,6 @@ app.use('/api/sponsors', eventSponsorRoutes);
 app.use('/api/interactions', interactionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/event-views', eventViewRoutes);
-app.use('/webhook', webhookRoutes);
 
 app.use(express.json());
 
