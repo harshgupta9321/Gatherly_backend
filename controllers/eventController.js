@@ -47,46 +47,6 @@ export const createEvent = async (req, res) => {
   }
 };
 
-
-  
-  // export const getAllEvents = async (req, res) => {
-  //   try {
-  //     const { category, location, search } = req.query;
-  //     const filters = {};
-  //     if (category) filters.category = category;
-  //     if (location) filters.location = location;
-  //     if (search) filters.title = { $regex: search, $options: 'i' };
-  
-  //     const events = await Event.aggregate([
-  //       { $match: filters },
-  //       {
-  //         $lookup: {
-  //           from: 'eventlikes',
-  //           localField: '_id',
-  //           foreignField: 'event',
-  //           as: 'likeDocs'
-  //         }
-  //       },
-  //       {
-  //         $addFields: {
-  //           likeCount: { $size: '$likeDocs' }
-  //         }
-  //       },
-  //       {
-  //         $project: {
-  //           likeDocs: 0
-  //         }
-  //       },
-  //       { $sort: { date: 1 } }
-  //     ]);
-  
-  //     res.json(events);
-  //   } catch (err) {
-  //     console.error("Error fetching events:", err.message);
-  //     res.status(500).json({ error: err.message });
-  //   }
-  // };
-
   export const getAllEvents = async (req, res) => {
     try {
       const { category, location, search } = req.query;
@@ -236,7 +196,7 @@ export const incrementView = async (req, res) => {
     }
 
     // Create a new view record for this event
-    const view = new EventView({
+  const view = new EventView({
       event: eventId,
       user: userId, // This will be null for anonymous users
       ipAddress,    // For anonymous users, we track the IP
