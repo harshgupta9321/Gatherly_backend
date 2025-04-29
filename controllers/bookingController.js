@@ -72,7 +72,7 @@ export const confirmVenueBooking = async (req, res) => {
 
     await newBooking.save();
 
-    res.status(201).json({ message: 'Booking successful', booking: newBooking });
+    res.status(200).json({ message: 'Booking successful', booking: newBooking });
   } catch (error) {
     console.error('Booking Confirmation Error:', error);
     res.status(500).json({ message: 'Server error', error });
