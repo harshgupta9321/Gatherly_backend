@@ -2,80 +2,46 @@ import cloudinary from 'cloudinary';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-// This must come FIRST, before cloudinary config
 
-// Initialize Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+export const registerUser = async (req, res) => {
+  console.log('🧠 Inside registerUser controller');
 
-// ✅ Register (assign default role: 'audience')
-export const register = async (req, res) => {
+  const { name, email, password, role } = req.body;
+  const avatar = req.file?.path;
+
+  if (!name || !email || !password || !role || !avatar) {
+    return res.status(400).json({ message: 'All fields including avatar are required' });
+  }
+
   try {
-    console.log("inside of register")
-    const { name, email, password } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(409).json({ message: 'User already exists' });
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-    console.log(process.env.CLOUDINARY_CLOUD_NAME);
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Handle avatar image upload (if exists)
-    let avatarUrl = '';
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path);  // Upload the image to Cloudinary
-      avatarUrl = result.secure_url;  // Get the URL of the uploaded image
-    }
-    console.log(avatarUrl)
-    const newUser = new User({
+    const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: 'audience', // 👈 Set default role here
-      avatar: avatarUrl,  // Save the avatar URL in the User document
+      role,
+      avatar,
     });
 
-    await newUser.save();
-
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        avatar: newUser.avatar,
+      },
+    });
+  } catch (err) {
+    console.error('❌ Registration Error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
-
-
-// ✅ Register (assign default role: 'audience')
-// export const register = async (req, res) => {
-//     try {
-//         const { name, email, password } = req.body;
-
-//         const userExists = await User.findOne({ email });
-//         if (userExists) {
-//             return res.status(400).json({ message: 'User already exists' });
-//         }
-
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPassword = await bcrypt.hash(password, salt);
-
-//         const newUser = new User({
-//             name,
-//             email,
-//             password: hashedPassword,
-//             role: 'audience', // 👈 Set default role here
-//         });
-
-//         await newUser.save();
-
-//         res.status(201).json({ message: 'User registered successfully' });
-//     } catch (error) {
-//         res.status(500).json({ message: 'Server error' });
-//     }
-// };
 
 // ✅ Login (safe, reads role from DB)
 export const login = async (req, res) => {
