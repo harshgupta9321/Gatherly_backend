@@ -2,6 +2,7 @@ import cloudinary from 'cloudinary';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+// This must come FIRST, before cloudinary config
 
 // Initialize Cloudinary
 cloudinary.config({
@@ -20,7 +21,7 @@ export const register = async (req, res) => {
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
-
+    console.log(process.env.CLOUDINARY_CLOUD_NAME);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -110,7 +111,8 @@ export const login = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.role, // Send for frontend UI control
+                role: user.role,
+                avatar: user.avatar // Send for frontend UI control
             },
         });
     } catch (error) {
@@ -229,7 +231,9 @@ export const getUserDetails = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      avatar: user.avatar, // Avatar URL from Cloudinary
+      avatar: user.avatar, 
+
+      // Avatar URL from Cloudinary
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -246,4 +250,25 @@ export const test = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }
+};
+
+// ✅ Check Logged-in User
+export const getMe = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId).select('-password'); // Exclude password
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid token' });
+  }
 };

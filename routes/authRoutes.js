@@ -13,7 +13,7 @@ import {
 // import  upload  from '../middleware/upload.js';  // Assuming the multer setup is in this file
 import authMiddleware from '../middleware/authMiddleware.js';
 import { checkRole } from '../middleware/checkRole.js';
-
+import { getMe } from '../controllers/authController.js';
 const router = express.Router();
 
 // import express from 'express';
@@ -22,6 +22,7 @@ import cloudinary from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import dotenv from 'dotenv';
 
+<<<<<<< HEAD
 dotenv.config(); // Load environment variables
 
 const app = express();
@@ -59,6 +60,14 @@ router.post("/register", (req, res, next) => {
 }, register);
 
 // For registering with avatar
+=======
+// Use the upload middleware to handle file upload in routes
+
+
+router.get('/me', getMe);
+
+router.post('/register', upload.single('avatar'), register);  // For registering with avatar
+>>>>>>> b06955f4c3991e1a5e013ba926628d1b3b658a53
 router.put('/api/users/update-profile', upload.single('avatar'), updateUserProfile);  // For updating profile avatar
 router.get('/user/details', authMiddleware, getUserDetails);
 router.post('/login', login);
