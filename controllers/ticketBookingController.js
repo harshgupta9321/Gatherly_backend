@@ -72,7 +72,7 @@ export const confirmTicketBooking = async (req, res) => {
     if (!event) return res.status(404).json({ message: 'Event not found' });
     if (!user) return res.status(404).json({ message: "User not found" });
 
-      
+
     if (event.ticketsAvailable < tickets) {
       return res.status(400).json({ message: 'Not enough tickets available' });
     }
@@ -145,15 +145,9 @@ export const getMyBookedEvents = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const bookings = await TicketBooking.find({ user: userId }).populate('event');
-<<<<<<< HEAD
-    // const events = bookings.map(booking => booking.event);
-
-    res.status(200).json({ bookings });
-=======
+    const bookings = await TicketBooking.find({ user: userId }).populate('event')
 
     res.status(200).json({bookings });
->>>>>>> b44982d00378ff404c0b0fa951d2dd36ea8a694c
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
