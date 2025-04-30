@@ -111,8 +111,14 @@ export const getMyBookedEvents = async (req, res) => {
     const userId = req.user.userId;
 
     const bookings = await TicketBooking.find({ user: userId }).populate('event');
+<<<<<<< HEAD
+    // const events = bookings.map(booking => booking.event);
+
+    res.status(200).json({ bookings });
+=======
 
     res.status(200).json({bookings });
+>>>>>>> b44982d00378ff404c0b0fa951d2dd36ea8a694c
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
