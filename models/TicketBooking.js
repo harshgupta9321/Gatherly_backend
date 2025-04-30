@@ -13,9 +13,11 @@ const ticketBookingSchema = new mongoose.Schema({
   },
   tickets: {
     type: Number,
-    required: true,
+    default: 1,
     min: 1,
+    max: 1, // Optional strict enforcement
   },
+  
   totalPrice: {
     type: Number,
     required: true,
@@ -29,6 +31,10 @@ const ticketBookingSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  qrCode: {
+    type: String, // base64 or cloudinary url
+  },
+  
 });
 
 export default mongoose.model('TicketBooking', ticketBookingSchema);

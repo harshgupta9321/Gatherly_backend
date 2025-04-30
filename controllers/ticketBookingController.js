@@ -4,6 +4,7 @@ import Event from '../models/Event.js';
 import User from '../models/User.js';
 import { sendTemplatedEmail } from '../utils/emailUtil.js';
 import stripe from '../utils/stripe.js';
+import { AwesomeQR } from "awesome-qr";
 
 export const initiateTicketBooking = async (req, res) => {
   try {
@@ -15,6 +16,12 @@ export const initiateTicketBooking = async (req, res) => {
 
     if (event.ticketsAvailable < tickets) {
       return res.status(400).json({ message: 'Not enough tickets available' });
+    }
+
+    // Check if user already booked this event
+    const existingBooking = await TicketBooking.findOne({ user: userId, event: eventId });
+    if (existingBooking) {
+      return res.status(400).json({ message: "You have already booked this event." });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -56,49 +63,77 @@ export const confirmTicketBooking = async (req, res) => {
     // 1. Retrieve session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    const { eventId, userId, tickets } = session.metadata;
+    let { eventId, userId, tickets } = session.metadata;
     tickets = parseInt(session.metadata.tickets);
     
-
     // 2. Check if event exists
     const event = await Event.findById(eventId);
+    const user = await User.findById(userId);
     if (!event) return res.status(404).json({ message: 'Event not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
 
     if (event.ticketsAvailable < tickets) {
       return res.status(400).json({ message: 'Not enough tickets available' });
     }
 
-    // 3. Create Ticket Booking
+    // 3. Check if user already booked this event
+    const existingBooking = await TicketBooking.findOne({ user: userId, event: eventId });
+    if (existingBooking) {
+      return res.status(400).json({ message: "You have already booked this event." });
+    }
+  
+    
+    // 4. Create Ticket Booking
     const totalPrice = event.ticketPrice * tickets;
 
+    const qrData = {
+      user: { id: user._id, name: user.name, email: user.email },
+      event: { id: event._id, title: event.title, createdBy: event.createdBy },
+      tickets,
+      date: new Date().toISOString()
+    };
+    
+    const qrBuffer = await new AwesomeQR({
+      text: JSON.stringify(qrData),
+      size: 500,
+      margin: 20,
+      dotScale: 0.8,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      logoImage: event.image, // make sure this is a valid URL if using logo
+      logoScale: 0.3,
+    }).draw();
+    
+    const qrBase64 = `data:image/png;base64,${qrBuffer.toString("base64")}`;
+    
+    // ✅ Save booking with QR
     const ticketBooking = new TicketBooking({
       event: eventId,
       user: userId,
       tickets,
       totalPrice,
+      qrCode: qrBase64,
     });
-
+    
     await ticketBooking.save();
-
-    event.ticketsAvailable -= tickets;
-    await event.save();
-
-    // 4. Send Confirmation Email
-    const user = await User.findById(userId);
-
+    
+    // ✅ Email with QR
     await sendTemplatedEmail(
       user.email,
-      'Your Ticket Booking Confirmation',
-      'ticketConfirmation',
+      "Your Ticket Booking Confirmation",
+      "ticketConfirmation", // template name
       {
         name: user.name,
         quantity: tickets,
         eventTitle: event.title,
         eventDate: event.date.toDateString(),
+        qrCode: qrBase64, // if your template supports it
       }
     );
-
-    res.status(201).json({ message: 'Ticket booking successful', ticketBooking });
+    
+    res.status(201).json({ message: "Ticket booking successful", ticketBooking });
+    
   } catch (error) {
     console.error('Error in confirmTicketBooking:', error.message);
     res.status(500).json({ message: error.message });
@@ -110,15 +145,9 @@ export const getMyBookedEvents = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const bookings = await TicketBooking.find({ user: userId }).populate('event');
-<<<<<<< HEAD
-    // const events = bookings.map(booking => booking.event);
-
-    res.status(200).json({ bookings });
-=======
+    const bookings = await TicketBooking.find({ user: userId }).populate('event')
 
     res.status(200).json({bookings });
->>>>>>> b44982d00378ff404c0b0fa951d2dd36ea8a694c
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
