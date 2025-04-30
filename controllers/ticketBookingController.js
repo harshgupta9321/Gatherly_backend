@@ -57,6 +57,8 @@ export const confirmTicketBooking = async (req, res) => {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     const { eventId, userId, tickets } = session.metadata;
+    tickets = parseInt(session.metadata.tickets);
+    
 
     // 2. Check if event exists
     const event = await Event.findById(eventId);
@@ -103,19 +105,6 @@ export const confirmTicketBooking = async (req, res) => {
   }
 };
 
-// export const getMyBookedEvents = async (req, res) => {
-//   try {
-//     const userId = req.user.userId;
-
-//     const bookings = await TicketBooking.find({ user: userId }).populate('event');
-//     const events = bookings.map(booking => booking.event);
-
-//     res.status(200).json({ events });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-  
-// };
 
 export const getMyBookedEvents = async (req, res) => {
   try {
