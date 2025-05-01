@@ -16,7 +16,7 @@ import recommendationRoutes from './routes/recommendationRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import eventCategoryRoutes from './routes/eventCategoryRoutes.js';
 import eventTagRoutes from './routes/eventTagRoutes.js';
-import eventSponsorRoutes from './routes/eventSponsorRoutes.js';
+import sponsorRoutes from './routes/sponsorRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import interactionRoutes from './routes/interactionRoutes.js';
 import eventViewRoutes from './routes/eventViewRoutes.js'
@@ -52,7 +52,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/admin',adminRoutes);
 app.use('/api/categories', eventCategoryRoutes);
 app.use('/api/tags', eventTagRoutes);
-app.use('/api/sponsors', eventSponsorRoutes);
+app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/interactions', interactionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/event-views', eventViewRoutes);

@@ -122,7 +122,7 @@ export const requestRoleUpgrade = async (req, res) => {
     try {
       const { roleRequest } = req.body;
   
-      if (!['organizer', 'vendor'].includes(roleRequest)) {
+      if (!['organizer', 'vendor','sponsor'].includes(roleRequest)) {
         return res.status(400).json({ message: 'Invalid role requested' });
       }
   
