@@ -18,11 +18,6 @@ export const initiateTicketBooking = async (req, res) => {
       return res.status(400).json({ message: 'Not enough tickets available' });
     }
 
-    // Check if user already booked this event
-    const existingBooking = await TicketBooking.findOne({ user: userId, event: eventId });
-    if (existingBooking) {
-      return res.status(400).json({ message: "You have already booked this event." });
-    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -150,6 +145,34 @@ export const getMyBookedEvents = async (req, res) => {
     res.status(200).json({bookings });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/ticket-booking/qr/:bookingId
+export const renderQRCode = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await TicketBooking.findById(bookingId).populate('event user');
+    if (!booking) return res.status(404).send('Booking not found');
+
+    const qrCodeBase64 = booking.qrCode;
+    if (!qrCodeBase64) return res.status(404).send('QR code not found');
+
+    // Render QR in HTML
+    res.send(`
+      <html>
+        <head><title>QR Code for ${booking.event.title}</title></head>
+        <body style="text-align:center;">
+          <h2>QR Code for ${booking.event.title}</h2>
+          <p>Booked by ${booking.user.name}</p>
+          <img src="${qrCodeBase64}" alt="QR Code" />
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error rendering QR code:', error.message);
+    res.status(500).send('Server error');
   }
 };
 

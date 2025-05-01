@@ -2,7 +2,8 @@ import express from 'express';
 import {
   initiateTicketBooking,
   confirmTicketBooking,
-  getMyBookedEvents
+  getMyBookedEvents,
+  renderQRCode
 } from '../controllers/ticketBookingController.js';
 
 import authMiddleware from '../middleware/authMiddleware.js';
@@ -17,5 +18,9 @@ router.post('/confirm', authMiddleware, confirmTicketBooking);
 
 // 3. Get My Booked Events
 router.get('/my-booked-events', authMiddleware, getMyBookedEvents);
+
+
+router.get('/qr/:bookingId', renderQRCode);
+
 
 export default router;
