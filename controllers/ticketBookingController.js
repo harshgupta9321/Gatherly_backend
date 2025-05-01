@@ -18,6 +18,11 @@ export const initiateTicketBooking = async (req, res) => {
       return res.status(400).json({ message: 'Not enough tickets available' });
     }
 
+    // Check if user already booked this event
+    const existingBooking = await TicketBooking.findOne({ user: userId, event: eventId });
+    if (existingBooking) {
+      return res.status(400).json({ message: "You have already booked this event." });
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
