@@ -4,7 +4,7 @@ import Event from '../models/Event.js';
 import User from '../models/User.js';
 import { sendTemplatedEmail } from '../utils/emailUtil.js';
 import stripe from '../utils/stripe.js';
-import { AwesomeQR } from "awesome-qr";
+// import { AwesomeQR } from "awesome-qr";
 
 export const initiateTicketBooking = async (req, res) => {
   try {
@@ -118,17 +118,17 @@ export const confirmTicketBooking = async (req, res) => {
     
     await ticketBooking.save();
     
-    // ✅ Email with QR
+
     await sendTemplatedEmail(
       user.email,
       "Your Ticket Booking Confirmation",
-      "ticketConfirmation", // template name
+      "ticketConfirmation", 
       {
         name: user.name,
         quantity: tickets,
         eventTitle: event.title,
         eventDate: event.date.toDateString(),
-        qrCode: qrBase64, // if your template supports it
+        qrCode: qrBase64, 
       }
     );
     
