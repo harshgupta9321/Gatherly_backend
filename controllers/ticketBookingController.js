@@ -4,7 +4,7 @@ import Event from '../models/Event.js';
 import User from '../models/User.js';
 import { sendTemplatedEmail } from '../utils/emailUtil.js';
 import stripe from '../utils/stripe.js';
-// import { AwesomeQR } from "awesome-qr";
+import { AwesomeQR } from "awesome-qr";
 
 export const initiateTicketBooking = async (req, res) => {
   try {

@@ -1,21 +1,27 @@
 import mongoose from 'mongoose';
-
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   avatar: { type: String },
-  phone: { type: String }, // You may want to store sponsor phone numbers here too
+  phone: { type: String },
+  address: { type: String },  // ✅ added address
   role: {
-    type: String,
-    enum: ['admin', 'organizer', 'audience', 'vendor', 'sponsor'],  // 👈 added sponsor
-    default: 'audience'  // 👈 default audience
+      type: String,
+      enum: ['admin', 'organizer', 'audience', 'vendor', 'sponsor'],
+      default: 'audience'
   },
   roleRequest: {
-    type: String,
-    enum: ['organizer', 'vendor', 'sponsor', null],  // 👈 added sponsor
-    default: null
-  }
+      type: String,
+      enum: ['organizer', 'vendor', 'sponsor', null],
+      default: null
+  },
+  isVerified: {
+      type: Boolean,
+      default: false  // ✅ email verification status
+  },
+  otp: { type: String },
+  otpExpires: { type: Date }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
