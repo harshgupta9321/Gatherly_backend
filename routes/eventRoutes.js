@@ -17,8 +17,8 @@ const router = express.Router();
 
 router.post('/create', authMiddleware, checkRole(['organizer', 'admin']),upload.single('image'), createEvent);
 router.get('/', getAllEvents);
-router.get('/:id', getEventById);
 router.get('/my-events', authMiddleware, checkRole(['organizer']), getMyEvents);
+router.get('/:id', getEventById);
 router.put('/:id', authMiddleware, checkRole(['organizer', 'admin']), updateEvent);
 router.delete('/:id', authMiddleware, checkRole(['organizer', 'admin']), deleteEvent);
 // routes/eventRoutes.js
