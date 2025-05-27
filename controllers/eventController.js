@@ -3,7 +3,7 @@ import Event from '../models/Event.js';
 import cloudinary from 'cloudinary';
 import EventLike from '../models/EventLike.js';
 import EventView from '../models/EventView.js';
-
+import ticketBooking from '../models/TicketBooking.js'
 
 
 
@@ -227,3 +227,37 @@ export const getEventViews = async (req, res) => {
   }
 };
 
+// @desc    Get all users enrolled in a specific event
+// @route   GET /api/events/:eventId/enrolled-users
+// @access  Organizer only
+export const getEnrolledUsersForEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    // Find the event
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+   
+    // Check if the requester is the organizer of this event
+    if (event.createdBy.toString() !== req.user.userId.toString()) {
+      return res.status(403).json({ message: 'Access denied: Not the organizer of this event' });
+    }
+
+    // Find all bookings for this event
+    const bookings = await ticketBooking.find({ event: eventId }).populate('user', 'name email avatar');
+
+    // Map enrolled users' info
+    const enrolledUsers = bookings.map((booking) => ({
+      name: booking.user.name,
+      email: booking.user.email,
+      avatar: booking.user.avatar,
+    }));
+
+    res.status(200).json({ enrolledUsers });
+  } catch (error) {
+    console.error('Error fetching enrolled users:', error.message);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};

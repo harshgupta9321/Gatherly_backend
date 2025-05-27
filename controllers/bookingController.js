@@ -119,3 +119,21 @@ export const updateBookingStatus = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+export const getBookedDatesForVenue = async (req, res) => {
+  const { venueId } = req.params;
+
+  try {
+    const bookedDates = await Booking.find({ venue: venueId })
+      .select('date')
+      .lean();
+
+    const dates = bookedDates.map((booking) => booking.date.toISOString().split('T')[0]);
+
+    res.status(200).json({ dates });
+  } catch (error) {
+    console.error('Error fetching booked dates:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

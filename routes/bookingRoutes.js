@@ -5,6 +5,7 @@ import {
   getUserBookings,
   getAllBookings,
   updateBookingStatus,
+  getBookedDatesForVenue
 } from '../controllers/bookingController.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 import { checkRole } from '../middleware/checkRole.js';
@@ -21,5 +22,6 @@ router.post('/bookings/confirm', authMiddleware, confirmVenueBooking);
 router.get('/bookings/my', authMiddleware, getUserBookings);
 router.get('/bookings', authMiddleware, checkRole(['admin']), getAllBookings);
 router.patch('/bookings/:id/status', authMiddleware, checkRole(['admin']), updateBookingStatus);
+router.get('/bookings/:venueId/booked-dates', authMiddleware, getBookedDatesForVenue);
 
 export default router;
