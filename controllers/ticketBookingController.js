@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import { sendTemplatedEmail } from '../utils/emailUtil.js';
 import stripe from '../utils/stripe.js';
 import { AwesomeQR } from "awesome-qr";
+import { createNotification } from '../utils/notificationUtils.js';
 
 export const initiateTicketBooking = async (req, res) => {
   try {
@@ -117,6 +118,15 @@ export const confirmTicketBooking = async (req, res) => {
     });
     
     await ticketBooking.save();
+
+    // 5. Create notification for organizer
+    await createNotification(
+      event.createdBy, // Organizer's userId or identifier
+      `New Ticket Booking for ${event.title}`,
+      `${user.name} has booked ${tickets} ticket(s) for your event "${event.title}".`,
+      'BOOKING',
+      ticketBooking._id // Optionally pass booking ID or relevant data
+    );
     
 
     await sendTemplatedEmail(

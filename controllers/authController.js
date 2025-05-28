@@ -225,6 +225,48 @@ export const getUserDetails = async (req, res) => {
     }
 };
 
+// ✅ Update user details (name, email, phone, address, avatar)
+export const updateUserDetails = async (req, res) => {
+    try {
+      const userId = req.user.userId;
+      const { name, email, phone, address } = req.body;
+  
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+  
+      // Update fields only if they are provided
+      if (name) user.name = name;
+      if (email) user.email = email;
+      if (phone) user.phone = phone;
+      if (address) user.address = address;
+  
+      // If avatar is updated
+      if (req.file) {
+        const result = await cloudinary.uploader.upload(req.file.path);
+        user.avatar = result.secure_url;
+      }
+  
+      await user.save();
+  
+      res.status(200).json({
+        message: 'User profile updated successfully',
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          address: user.address,
+          avatar: user.avatar,
+          role: user.role,
+        },
+      });
+    } catch (error) {
+      console.error('❌ Error updating user profile:', error);
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  };
+  
+
 // ✅ Test route
 export const test = async (req, res) => {
     try {
@@ -355,3 +397,5 @@ export const createRoleRequest = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+

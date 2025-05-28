@@ -12,7 +12,8 @@ import {
     getThemePreference,
     updateThemePreference,
     verifyToken,
-    createRoleRequest
+    createRoleRequest,
+    updateUserDetails
 } from '../controllers/authController.js';
 // import  upload  from '../middleware/upload.js';  // Assuming the multer setup is in this file
 import authMiddleware from '../middleware/authMiddleware.js';
@@ -26,7 +27,7 @@ const router = express.Router();
 router.post('/register', upload.single('avatar'), registerUser);
 router.post('/login', login);
 router.post('/logout', logout);
-router.get('/verify-email/:token', verifyEmail);
+router.post('/verify-email', verifyEmail);
 router.get('/verify-token', verifyToken);
 
 // Protected routes
@@ -35,6 +36,7 @@ router.get('/me', getMe);
 router.get('/user-count', getUserCount);
 router.get('/user/:id', getUserDetails);
 router.put('/profile', upload.single('avatar'), updateUserProfile);
+router.put('/update-details', authMiddleware, upload.single('avatar'), updateUserDetails);
 router.post('/role-request', upload.single('documents'), createRoleRequest);
 router.get('/theme', getThemePreference);
 router.put('/theme', updateThemePreference);

@@ -16,7 +16,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['ROLE_REQUEST', 'ROLE_APPROVED', 'ROLE_REJECTED', 'GENERAL'],
+    enum: ['ROLE_REQUEST', 'ROLE_APPROVED', 'ROLE_REJECTED', 'GENERAL','BOOKING'],
     default: 'GENERAL'
   },
   read: {
