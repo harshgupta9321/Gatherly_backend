@@ -1,6 +1,9 @@
 import User from '../models/User.js';
 import Booking from '../models/Booking.js';
 import Venue from '../models/Venue.js';
+import RoleRequest from '../models/RoleRequest.js';
+import Notification from '../models/Notification.js';
+import { createNotification } from '../utils/notificationUtils.js';
 
 
 // Get all users
@@ -95,30 +98,164 @@ export const getUsersByRole = async (req, res) => {
 // Get all users with role requests
 export const getRoleRequests = async (req, res) => {
   try {
-    const users = await User.find({ roleRequest: { $ne: null } }).select('-password');
-    res.status(200).json(users);
+    console.log('Fetching role requests...');
+    const requests = await RoleRequest.find()
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 });
+    
+    console.log('Found role requests:', requests);
+    
+    if (!requests || requests.length === 0) {
+      console.log('No role requests found');
+      return res.status(200).json([]); // Return empty array instead of error
+    }
+
+    res.status(200).json(requests);
+  } catch (error) {
+    console.error('Error in getRoleRequests:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Update role request status
+export const updateRoleRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const request = await RoleRequest.findById(id).populate('user');
+    if (!request) {
+      return res.status(404).json({ message: 'Role request not found' });
+    }
+
+    request.status = status;
+    await request.save();
+
+    // If request is approved, update user's role
+    if (status === 'approved') {
+      const user = await User.findById(request.user._id);
+      if (user) {
+        user.role = request.role;
+        await user.save();
+      }
+    }
+
+    // Create notification
+    await createNotification(
+      request.user._id,
+      `Role Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+      `Your request to become a ${request.role} has been ${status}`,
+      'ROLE_REQUEST',
+      request._id
+    );
+
+    res.status(200).json({ message: 'Role request updated', request });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
-// Approve role request
+// Approve role request (legacy support)
 export const approveRoleRequest = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await User.findById(id);
-    if (!user || !user.roleRequest) {
-      return res.status(404).json({ message: 'User or role request not found' });
+    const request = await RoleRequest.findById(id).populate('user');
+    if (!request) {
+      return res.status(404).json({ message: 'Role request not found' });
     }
 
-    user.role = user.roleRequest;
-    user.roleRequest = null;
-    await user.save();
+    request.status = 'approved';
+    await request.save();
 
-    res.status(200).json({ message: 'Role request approved', user });
+    // Update user's role
+    const user = await User.findById(request.user._id);
+    if (user) {
+      user.role = request.role;
+      await user.save();
+    }
+
+    // Create notification
+    await createNotification(
+      request.user._id,
+      'Role Request Approved',
+      `Your request to become a ${request.role} has been approved`,
+      'ROLE_APPROVED',
+      request._id
+    );
+
+    res.status(200).json({ message: 'Role request approved', request });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Create a test role request (for debugging purposes)
+export const createTestRoleRequest = async (req, res) => {
+  try {
+    const testRequest = new RoleRequest({
+      user: req.user.userId, // Use the admin's ID for testing
+      role: 'sponsor',
+      businessName: 'Test Business',
+      description: 'Test Description',
+      experience: '5 years',
+      contactNumber: '1234567890',
+      website: 'http://test.com',
+      status: 'pending'
+    });
+
+    await testRequest.save();
+    console.log('Created test role request:', testRequest);
+
+    res.status(201).json({
+      message: 'Test role request created',
+      request: testRequest
+    });
+  } catch (error) {
+    console.error('Error creating test role request:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Get all admin notifications
+export const getAdminNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({ userId: req.user.userId })
+      .sort({ createdAt: -1 })
+      .populate('requestId');
+    
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error fetching admin notifications:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Mark a notification as read
+export const markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const notification = await Notification.findById(id);
+    
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+
+    if (notification.userId.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Not authorized to update this notification' });
+    }
+
+    notification.read = true;
+    await notification.save();
+
+    res.status(200).json({ message: 'Notification marked as read', notification });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 

@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import {sendTemplatedEmail} from '../utils/emailUtil.js';
+import RoleRequest from '../models/RoleRequest.js';
+import { createNotification } from '../utils/notificationUtils.js';
 
 // ✅ Register user & send 4-digit OTP
 export const registerUser = async (req, res) => {
@@ -251,4 +253,105 @@ export const getMe = async (req, res) => {
     } catch (error) {
         res.status(401).json({ message: 'Invalid token' });
     }
+};
+
+// Get user's theme preference
+export const getThemePreference = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const user = await User.findById(userId);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ isDarkMode: user.themePreference === 'dark' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// Update user's theme preference
+export const updateThemePreference = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { isDarkMode } = req.body;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.themePreference = isDarkMode ? 'dark' : 'light';
+        await user.save();
+
+        res.status(200).json({ message: 'Theme preference updated successfully', isDarkMode });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// Add this new controller function
+export const verifyToken = async (req, res) => {
+  try {
+    // If the request reaches here, it means the token is valid
+    // (because it passed through the authMiddleware)
+    res.status(200).json({ valid: true });
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+// Create a new role request
+export const createRoleRequest = async (req, res) => {
+  try {
+    const { role, businessName, description, experience, contactNumber, website } = req.body;
+    const userId = req.user.userId;
+
+    // Validate required fields
+    if (!role || !businessName || !description || !experience || !contactNumber) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Check if user already has a pending request
+    const existingRequest = await RoleRequest.findOne({
+      user: userId,
+      status: 'pending'
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({ message: 'You already have a pending role request' });
+    }
+
+    // Create the role request
+    const roleRequest = new RoleRequest({
+      user: userId,
+      role,
+      businessName,
+      description,
+      experience,
+      contactNumber,
+      website,
+      documents: req.file ? req.file.path : undefined
+    });
+
+    await roleRequest.save();
+
+    // Create notification for admin
+    await createNotification(
+      userId,
+      'New Role Request',
+      `Your request to become a ${role} has been submitted and is pending review`,
+      'ROLE_REQUEST',
+      roleRequest._id
+    );
+
+    res.status(201).json({
+      message: 'Role request submitted successfully',
+      request: roleRequest
+    });
+  } catch (error) {
+    console.error('Error creating role request:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 };

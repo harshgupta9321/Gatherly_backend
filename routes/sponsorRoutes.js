@@ -13,7 +13,7 @@ import {checkRole} from '../middleware/checkRole.js'; // Assuming checkRole is d
 const router = express.Router();
 
 // Sponsor routes
-router.post('/details', authMiddleware, checkRole('sponsor'), addOrUpdateSponsorDetails);  // Sponsor adds or updates details
+router.post('/details', authMiddleware, checkRole(['organizer', 'sponsor']), addOrUpdateSponsorDetails);  // Allow both organizers and sponsors
 router.get('/', authMiddleware, getAllSponsors);                     // View all sponsors
 
 // Organizer routes

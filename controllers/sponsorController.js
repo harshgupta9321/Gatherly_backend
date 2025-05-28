@@ -7,43 +7,70 @@ import Event from '../models/Event.js';
 export const addOrUpdateSponsorDetails = async (req, res) => {
   try {
     const userId = req.user.userId;
+    const { company, description, experience } = req.body;
 
+    if (!company || !description || !experience) {
+      return res.status(400).json({ message: 'Company name, description, and experience are required' });
+    }
+
+    // Find the user
     const user = await User.findById(userId);
-    if (!user || user.role !== 'sponsor') {
-      return res.status(403).json({ message: 'Only sponsors can add or update sponsorship details' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    const { company, category, criteria, phone } = req.body;
+    // If user is an organizer, create a sponsor request
+    if (user.role === 'organizer') {
+      // Create a temporary sponsor record for the organizer
+      const sponsorData = {
+        user: userId,
+        company,
+        description,
+        experience,
+        status: 'pending',
+        isTemporary: true // Flag to indicate this is a temporary sponsor record
+      };
 
-    if (!company || !category || !phone) {
-      return res.status(400).json({ message: 'Company, category, and phone are required' });
+      // Create or update the sponsor record
+      let sponsor = await Sponsor.findOne({ user: userId });
+      if (sponsor) {
+        Object.assign(sponsor, sponsorData);
+        await sponsor.save();
+      } else {
+        sponsor = await Sponsor.create(sponsorData);
+      }
+
+      return res.status(200).json({ 
+        message: 'Sponsor application submitted successfully. Please wait for admin approval.',
+        sponsor 
+      });
     }
 
-    // Ensure category is an array
-    const categories = Array.isArray(category) ? category : [category];
-
+    // If user is already a sponsor, update their details
     let sponsor = await Sponsor.findOne({ user: userId });
 
     if (sponsor) {
       // Update existing
       sponsor.company = company;
-      sponsor.category = categories; // update category to array
-      sponsor.criteria = criteria;
-      sponsor.phone = phone;
+      sponsor.description = description;
+      sponsor.experience = experience;
       await sponsor.save();
     } else {
       // Create new
       sponsor = await Sponsor.create({
         user: userId,
         company,
-        category: categories, // set category as array
-        criteria,
-        phone,
+        description,
+        experience
       });
     }
 
-    res.status(200).json({ message: 'Sponsorship details saved successfully', sponsor });
+    res.status(200).json({ 
+      message: 'Sponsorship details saved successfully', 
+      sponsor 
+    });
   } catch (error) {
+    console.error('Sponsor details error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

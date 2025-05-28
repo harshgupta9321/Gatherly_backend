@@ -5,8 +5,12 @@ import {
   getVenueStats,
   getAllBookings,
   getUsersByRole,
-  getRoleRequests,         // ✅ New
-  approveRoleRequest       // ✅ New
+  getRoleRequests,
+  approveRoleRequest,
+  updateRoleRequest,
+  createTestRoleRequest,
+  getAdminNotifications,
+  markNotificationAsRead
 } from '../controllers/adminController.js';
 
 import auth from '../middleware/authMiddleware.js';
@@ -17,16 +21,23 @@ const router = express.Router();
 // Admin-only routes
 router.use(auth, checkRole(['admin']));
 
+// User management
 router.get('/users', getAllUsers);
-router.patch('/users/:id/role', updateUserRole);
+router.put('/users/:id/role', updateUserRole);
+router.get('/users/role/:role', getUsersByRole);
+
+// Role request management
+router.get('/role-requests', getRoleRequests);
+router.put('/role-requests/:id', updateRoleRequest);
+router.put('/approve-role/:id', approveRoleRequest);
+router.post('/test-role-request', createTestRoleRequest);
+
+// Notification management
+router.get('/notifications', getAdminNotifications);
+router.put('/notifications/:id/read', markNotificationAsRead);
+
+// Venue and booking management
 router.get('/venue-stats', getVenueStats);
 router.get('/bookings', getAllBookings);
-router.get('/users/roles', getUsersByRole);
-
-// ✅ New: Get all users who requested role upgrade
-router.get('/role-requests', getRoleRequests);
-
-// ✅ New: Admin approves role request
-router.put('/approve-role/:id', approveRoleRequest);
 
 export default router;

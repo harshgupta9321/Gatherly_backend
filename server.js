@@ -21,27 +21,42 @@ import reviewRoutes from './routes/reviewRoutes.js';
 import interactionRoutes from './routes/interactionRoutes.js';
 import eventViewRoutes from './routes/eventViewRoutes.js'
 import aiRoutes from "./routes/aiRoutes.js"
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import notificationRoutes from './routes/notificationRoutes.js';
+import { socketAuth } from './middleware/socketAuth.js';
 
 // dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Apply socket authentication middleware
+io.use(socketAuth);
+
+// Make io available globally
+global.io = io;
 
 // Connect Database
 connectDB();
 
-
 // Middleware
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173', 
-    credentials: true               
-  }));
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(cookieParser()); 
 
-
-//api route
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/venues', venueRoutes);
 app.use('/api', bookingRoutes);
@@ -57,18 +72,28 @@ app.use('/api/interactions', interactionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/event-views', eventViewRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/notifications', notificationRoutes);
 
-app.use(express.json());
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  // Join a room based on user ID for targeted notifications
+  if (socket.userId) {
+    socket.join(socket.userId);
+    console.log(`User ${socket.userId} joined their room`);
+  }
 
-
-
-
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 app.get('/', (req, res) => {
     res.send('API is running...');
 });
 
-
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 5000;
+httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

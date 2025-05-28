@@ -5,10 +5,14 @@ import {
     logout,
     test,
     getUserCount,
-    requestRoleUpgrade ,
+    requestRoleUpgrade,
     updateUserProfile,
     verifyEmail,
-    getUserDetails
+    getUserDetails,
+    getThemePreference,
+    updateThemePreference,
+    verifyToken,
+    createRoleRequest
 } from '../controllers/authController.js';
 // import  upload  from '../middleware/upload.js';  // Assuming the multer setup is in this file
 import authMiddleware from '../middleware/authMiddleware.js';
@@ -18,18 +22,21 @@ import upload from '../config/multer.js';
 
 const router = express.Router();
 
-
+// Public routes
 router.post('/register', upload.single('avatar'), registerUser);
-router.post('/verify-email', verifyEmail);  
-router.get('/me', getMe);
-router.get('/user/details', authMiddleware, getUserDetails);
 router.post('/login', login);
 router.post('/logout', logout);
+router.get('/verify-email/:token', verifyEmail);
+router.get('/verify-token', verifyToken);
+
+// Protected routes
+router.use(authMiddleware);
+router.get('/me', getMe);
 router.get('/user-count', getUserCount);
-router.get('/test', test);
-
-// Role request by user (audience -> organizer/vendor)
-router.post('/request-role', authMiddleware, requestRoleUpgrade); // ✅ New route
-
+router.get('/user/:id', getUserDetails);
+router.put('/profile', upload.single('avatar'), updateUserProfile);
+router.post('/role-request', upload.single('documents'), createRoleRequest);
+router.get('/theme', getThemePreference);
+router.put('/theme', updateThemePreference);
 
 export default router;

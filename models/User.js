@@ -21,7 +21,12 @@ const userSchema = new mongoose.Schema({
       default: false  // ✅ email verification status
   },
   otp: { type: String },
-  otpExpires: { type: Date }
+  otpExpires: { type: Date },
+  themePreference: {
+      type: String,
+      enum: ['light', 'dark'],
+      default: 'dark'
+  }
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
